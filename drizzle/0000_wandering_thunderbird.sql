@@ -1,4 +1,19 @@
 CREATE TYPE "public"."category_type" AS ENUM('special', 'place', 'situation', 'weather');--> statement-breakpoint
+CREATE TABLE "accounts" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "accounts_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"userId" integer NOT NULL,
+	"type" text NOT NULL,
+	"provider" text NOT NULL,
+	"providerAccountId" text NOT NULL,
+	"refresh_token" text,
+	"access_token" text,
+	"expires_at" integer,
+	"token_type" text,
+	"scope" text,
+	"id_token" text,
+	"session_state" text
+);
+--> statement-breakpoint
 CREATE TABLE "boardComments" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "boardComments_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"postId" integer NOT NULL,
@@ -52,6 +67,14 @@ CREATE TABLE "savedTracks" (
 	"createdAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "sessions" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "sessions_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"sessionToken" text NOT NULL,
+	"userId" integer NOT NULL,
+	"expires" timestamp NOT NULL,
+	CONSTRAINT "sessions_sessionToken_unique" UNIQUE("sessionToken")
+);
+--> statement-breakpoint
 CREATE TABLE "storagePacks" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "storagePacks_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"userId" integer NOT NULL,
@@ -85,13 +108,19 @@ CREATE TABLE "tracks" (
 --> statement-breakpoint
 CREATE TABLE "users" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "users_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"openId" varchar(64) NOT NULL,
 	"name" text,
 	"email" varchar(320),
-	"loginMethod" varchar(64),
+	"emailVerified" timestamp,
+	"image" text,
 	"role" varchar(20) DEFAULT 'user' NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp DEFAULT now() NOT NULL,
-	"lastSignedIn" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "users_openId_unique" UNIQUE("openId")
+	CONSTRAINT "users_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+CREATE TABLE "verificationTokens" (
+	"identifier" text NOT NULL,
+	"token" text NOT NULL,
+	"expires" timestamp NOT NULL,
+	CONSTRAINT "verificationTokens_token_unique" UNIQUE("token")
 );

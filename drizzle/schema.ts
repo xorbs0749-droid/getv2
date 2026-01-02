@@ -1,29 +1,58 @@
 import { integer, pgEnum, pgTable, text, timestamp, varchar, boolean } from "drizzle-orm/pg-core";
 
 /**
- * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
+ * Auth.js 필수 테이블들
  */
 export const users = pgTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  /** Google OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
-  email: varchar("email", { length: 320 }),
-  loginMethod: varchar("loginMethod", { length: 64 }),
+  email: varchar("email", { length: 320 }).unique(),
+  emailVerified: timestamp("emailVerified"),
+  image: text("image"),
   role: varchar("role", { length: 20 }).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+export const accounts = pgTable("accounts", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: integer("userId").notNull(),
+  type: text("type").notNull(),
+  provider: text("provider").notNull(),
+  providerAccountId: text("providerAccountId").notNull(),
+  refresh_token: text("refresh_token"),
+  access_token: text("access_token"),
+  expires_at: integer("expires_at"),
+  token_type: text("token_type"),
+  scope: text("scope"),
+  id_token: text("id_token"),
+  session_state: text("session_state"),
+});
+
+export type Account = typeof accounts.$inferSelect;
+export type InsertAccount = typeof accounts.$inferInsert;
+
+export const sessions = pgTable("sessions", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  sessionToken: text("sessionToken").notNull().unique(),
+  userId: integer("userId").notNull(),
+  expires: timestamp("expires").notNull(),
+});
+
+export type Session = typeof sessions.$inferSelect;
+export type InsertSession = typeof sessions.$inferInsert;
+
+export const verificationTokens = pgTable("verificationTokens", {
+  identifier: text("identifier").notNull(),
+  token: text("token").notNull().unique(),
+  expires: timestamp("expires").notNull(),
+});
+
+export type VerificationToken = typeof verificationTokens.$inferSelect;
+export type InsertVerificationToken = typeof verificationTokens.$inferInsert;
 
 /**
  * Categories table for organizing music by place, situation, weather, and genre
