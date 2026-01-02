@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1767068426089,
+      "tag": "0000_public_fabian_cortez",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1767068683629,
+      "tag": "0001_fixed_komodo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1767071373313,
+      "tag": "0002_swift_ulik",
+      "breakpoints": true
+    }
+  ]
+}

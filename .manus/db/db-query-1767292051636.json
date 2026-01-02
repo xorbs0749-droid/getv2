@@ -1,0 +1,82 @@
+{
+  "query": "SELECT id, name, slug, type FROM categories ORDER BY type, `order`",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ZiJeu2EYNRynNwv.b869d29c6952 --database GpLH3m9nrCXyr73ahd4xks --execute SELECT id, name, slug, type FROM categories ORDER BY type, `order`",
+  "rows": [
+    {
+      "id": "10",
+      "name": "재즈",
+      "slug": "jazz",
+      "type": "special"
+    },
+    {
+      "id": "11",
+      "name": "클래식",
+      "slug": "classical",
+      "type": "special"
+    },
+    {
+      "id": "12",
+      "name": "어쿠스틱",
+      "slug": "acoustic",
+      "type": "special"
+    },
+    {
+      "id": "1",
+      "name": "카페",
+      "slug": "cafe",
+      "type": "place"
+    },
+    {
+      "id": "2",
+      "name": "라운지",
+      "slug": "lounge",
+      "type": "place"
+    },
+    {
+      "id": "3",
+      "name": "식당",
+      "slug": "restaurant",
+      "type": "place"
+    },
+    {
+      "id": "4",
+      "name": "집중",
+      "slug": "focus",
+      "type": "situation"
+    },
+    {
+      "id": "5",
+      "name": "휴식",
+      "slug": "relax",
+      "type": "situation"
+    },
+    {
+      "id": "6",
+      "name": "운동",
+      "slug": "workout",
+      "type": "situation"
+    },
+    {
+      "id": "7",
+      "name": "맑음",
+      "slug": "sunny",
+      "type": "weather"
+    },
+    {
+      "id": "8",
+      "name": "흐림",
+      "slug": "cloudy",
+      "type": "weather"
+    },
+    {
+      "id": "9",
+      "name": "비",
+      "slug": "rainy",
+      "type": "weather"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\ttype\n10\t재즈\tjazz\tspecial\n11\t클래식\tclassical\tspecial\n12\t어쿠스틱\tacoustic\tspecial\n1\t카페\tcafe\tplace\n2\t라운지\tlounge\tplace\n3\t식당\trestaurant\tplace\n4\t집중\tfocus\tsituation\n5\t휴식\trelax\tsituation\n6\t운동\tworkout\tsituation\n7\t맑음\tsunny\tweather\n8\t흐림\tcloudy\tweather\n9\t비\trainy\tweather\n",
+  "stderr": "",
+  "execution_time_ms": 1537
+}
