@@ -12,22 +12,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const code = req.query.code as string;
 
   if (!code) {
-    res.status(400).json({ error: 'Authorization code is required' });
-    return;
+    return res.status(400).json({ error: 'Authorization code is required' });
   }
 
   try {
+    console.log('[OAuth] Starting callback with code:', code.substring(0, 10) + '...');
+    
     const oauth2Client = new OAuth2Client(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
       REDIRECT_URI
     );
 
-    // 토큰 교환
+    console.log('[OAuth] Exchanging code for tokens...');
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
-    // 사용자 정보 가져오기
+    console.log('[OAuth] Fetching user info...');
     const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: {
         Authorization: `Bearer ${tokens.access_token}`,
@@ -35,14 +36,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     const userInfo = await response.json();
+    console.log('[OAuth] User info:', userInfo.email);
 
-    // 사용자 DB에 저장 또는 업데이트
     let userId: number;
     
+    console.log('[OAuth] Checking existing user...');
     const existingUsers = await db.select().from(users).where(eq(users.email, userInfo.email)).limit(1);
     
     if (existingUsers.length === 0) {
-      // 새 사용자 생성
+      console.log('[OAuth] Creating new user...');
       const newUsers = await db.insert(users).values({
         name: userInfo.name || null,
         email: userInfo.email || null,
@@ -51,8 +53,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }).returning();
       
       userId = newUsers[0].id;
+      console.log('[OAuth] New user created:', userId);
       
-      // Account 레코드 생성
+      console.log('[OAuth] Creating account record...');
       await db.insert(accounts).values({
         userId,
         type: 'oauth',
@@ -67,8 +70,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     } else {
       userId = existingUsers[0].id;
+      console.log('[OAuth] Existing user found:', userId);
       
-      // 기존 사용자 업데이트
       await db.update(users)
         .set({ 
           updatedAt: new Date(),
@@ -77,9 +80,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .where(eq(users.id, userId));
     }
 
-    // 세션 생성
+    console.log('[OAuth] Creating session...');
     const sessionToken = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30일
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     await db.insert(sessions).values({
       sessionToken,
@@ -87,13 +90,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       expires,
     });
 
-    // 쿠키 설정
+    console.log('[OAuth] Setting cookie and redirecting...');
     res.setHeader('Set-Cookie', `next-auth.session-token=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
-
-    // 홈으로 리다이렉트
-    res.redirect(302, '/home');
+    return res.redirect(302, '/home');
   } catch (error) {
-    console.error('[Google OAuth] Callback failed', error);
-    res.status(500).json({ error: 'Google OAuth callback failed', details: String(error) });
+    console.error('[OAuth] Callback failed:', error);
+    console.error('[OAuth] Error stack:', error instanceof Error ? error.stack : 'No stack');
+    return res.status(500).json({ 
+      error: 'Google OAuth callback failed', 
+      details: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
   }
 }
