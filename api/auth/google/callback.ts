@@ -1,15 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { OAuth2Client } from 'google-auth-library';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from '../../../drizzle/schema';
-import { users } from '../../../drizzle/schema';
+import { db } from '../../../lib/db';
+import { users, accounts, sessions } from '../../../drizzle/schema';
 import { eq } from 'drizzle-orm';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://getv2.vercel.app/api/auth/google/callback';
-const DATABASE_URL = process.env.DATABASE_URL || '';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const code = req.query.code as string;
@@ -39,44 +36,62 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const userInfo = await response.json();
 
-    // 데이터베이스 연결
-    const client = postgres(DATABASE_URL);
-    const db = drizzle(client, { schema });
-
-    // 사용자 DB에 저장
-    const openId = `google:${userInfo.id}`;
+    // 사용자 DB에 저장 또는 업데이트
+    let userId: number;
     
-    const existingUser = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+    const existingUsers = await db.select().from(users).where(eq(users.email, userInfo.email)).limit(1);
     
-    if (existingUser.length === 0) {
-      await db.insert(users).values({
-        openId,
+    if (existingUsers.length === 0) {
+      // 새 사용자 생성
+      const newUsers = await db.insert(users).values({
         name: userInfo.name || null,
         email: userInfo.email || null,
-        loginMethod: 'google',
-        lastSignedIn: new Date(),
+        image: userInfo.picture || null,
+        emailVerified: new Date(),
+      }).returning();
+      
+      userId = newUsers[0].id;
+      
+      // Account 레코드 생성
+      await db.insert(accounts).values({
+        userId,
+        type: 'oauth',
+        provider: 'google',
+        providerAccountId: userInfo.id,
+        access_token: tokens.access_token || null,
+        refresh_token: tokens.refresh_token || null,
+        expires_at: tokens.expiry_date ? Math.floor(tokens.expiry_date / 1000) : null,
+        token_type: tokens.token_type || null,
+        scope: tokens.scope || null,
+        id_token: tokens.id_token || null,
       });
     } else {
+      userId = existingUsers[0].id;
+      
+      // 기존 사용자 업데이트
       await db.update(users)
-        .set({ lastSignedIn: new Date() })
-        .where(eq(users.openId, openId));
+        .set({ 
+          updatedAt: new Date(),
+          image: userInfo.picture || null,
+        })
+        .where(eq(users.id, userId));
     }
 
-    await client.end();
+    // 세션 생성
+    const sessionToken = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30일
 
-    // 간단한 세션 토큰 생성 (임시)
-    const sessionToken = Buffer.from(JSON.stringify({
-      openId,
-      name: userInfo.name,
-      email: userInfo.email,
-      exp: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1년
-    })).toString('base64');
+    await db.insert(sessions).values({
+      sessionToken,
+      userId,
+      expires,
+    });
 
     // 쿠키 설정
-    res.setHeader('Set-Cookie', `session=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=31536000`);
+    res.setHeader('Set-Cookie', `next-auth.session-token=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
 
     // 홈으로 리다이렉트
-    res.redirect(302, '/');
+    res.redirect(302, '/home');
   } catch (error) {
     console.error('[Google OAuth] Callback failed', error);
     res.status(500).json({ error: 'Google OAuth callback failed', details: String(error) });
