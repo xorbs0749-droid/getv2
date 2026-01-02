@@ -1,6 +1,6 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
-// Generate Auth.js login URL
+// Generate Auth.js Google OAuth login URL
 export const getLoginUrl = () => {
-  return "/api/auth/signin";
+  return "/api/auth/signin/google";
 };
