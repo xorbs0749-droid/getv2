@@ -9,7 +9,7 @@ import { trpc } from "@/lib/trpc";
 import { Zap, Heart, LogIn, LogOut, MessageSquare, BookOpen, Music } from "lucide-react";
 import { useTimeBasedBackground } from "@/hooks/useTimeBasedBackground";
 import { Link } from "wouter";
-import type { Track } from "../../../drizzle/schema";
+import type { Track } from "../../../lib/schema";
 
 export default function Home() {
   const { user, logout } = useAuth();

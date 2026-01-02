@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import * as LucideIcons from "lucide-react";
-import type { Category } from "../../../drizzle/schema";
+import type { Category } from "../../../lib/schema";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 
 interface CategoryCardProps {

@@ -3,7 +3,7 @@ import { useTimeBasedBackground } from "@/hooks/useTimeBasedBackground";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { X, Play, Pause, SkipForward, SkipBack, Heart, Volume2, VolumeX, Settings, Shuffle } from "lucide-react";
-import type { Track } from "../../../drizzle/schema";
+import type { Track } from "../../../lib/schema";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";

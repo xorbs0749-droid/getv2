@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
-import type { Track } from '../../../drizzle/schema';
+import type { Track } from '../../../lib/schema';
 
 interface MusicPlayerContextType {
   currentTrack: Track | null;

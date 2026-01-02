@@ -7,7 +7,7 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 import { trpc } from "@/lib/trpc";
 import { Music, Heart, ArrowLeft, ShoppingCart } from "lucide-react";
 import { Link } from "wouter";
-import type { Track } from "../../../drizzle/schema";
+import type { Track } from "../../../lib/schema";
 
 export default function SavedTracks() {
   const { user } = useAuth();
